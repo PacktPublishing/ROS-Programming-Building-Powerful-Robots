@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<robot name="differential_wheeled_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  
+
+  <xacro:include filename="$(find mastering_ros_robot_description_pkg)/urdf/wheel.urdf.xacro" />
+
+<!-- Defining the colors used in this robot -->
+  <material name="Black">
+    <color rgba="0.0 0.0 0.0 1.0"/>
+  </material>
+
+  <material name="Red">
+    <color rgba="0.8 0.0 0.0 1.0"/>
+  </material>
+
+  <material name="White">
+    <color rgba="1.0 1.0 1.0 1.0"/>
+  </material>
+
+
+  <!-- PROPERTY LIST -->
+  <!--All units in m-kg-s-radians unit system -->
+  <property name="M_PI" value="3.1415926535897931" />
+  <property name="M_PI_2" value="1.570796327" />
+  <property name="DEG_TO_RAD" value="0.017453293" />
+
+  <!-- Main body radius and height -->
+  <!-- Main Body Cylinder base   -->
+  <property name="base_height" value="0.02" /> 
+  <property name="base_radius" value="0.15" /> 
+  <property name="base_mass" value="35" /> <!-- in kg-->
+
+
+
+  <!-- caster wheel radius and height -->
+  <!-- caster wheel mass -->
+  <property name="caster_f_height" value="0.04" /> 
+  <property name="caster_f_radius" value="0.008" /> 
+  <property name="caster_f_mass" value="35" /> <!-- in kg-->
+
+
+
+  <!-- caster wheel radius and height -->
+  <!-- caster wheel mass -->
+  <property name="caster_b_height" value="0.04" /> 
+  <property name="caster_b_radius" value="0.008" /> 
+  <property name="caster_b_mass" value="35" /> <!-- in kg-->
+
+
+
+
+  <!-- Wheels -->
+<!--  <property name="wheel_radius" value="0.2" /> 
+  <property name="wheel_height" value="0.1" />
+  <property name="wheel_mass" value="2.5" /> --> <!-- in kg-->
+  
+  <property name="base_x_origin_to_wheel_origin" value="0.25" />
+  <property name="base_y_origin_to_wheel_origin" value="0.3" />
+  <property name="base_z_origin_to_wheel_origin" value="0.0" />
+
+
+  <!-- Macro for calculating inertia of cylinder -->
+  <macro name="cylinder_inertia" params="m r h">
+    <inertia  ixx="${m*(3*r*r+h*h)/12}" ixy = "0" ixz = "0"
+              iyy="${m*(3*r*r+h*h)/12}" iyz = "0"
+              izz="${m*r*r/2}" /> 
+  </macro>
+
+
+  <!-- BASE-FOOTPRINT -->
+  <!-- base_footprint is a fictitious link(frame) that is on the ground right below base_link origin -->
+  <link name="base_footprint">
+    <inertial>
+      <mass value="0.0001" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+          iyy="0.0001" iyz="0.0" 
+          izz="0.0001" />
+    </inertial>
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+            <box size="0.001 0.001 0.001" />
+        </geometry>
+    </visual>
+  </link>
+
+  <gazebo reference="base_footprint">
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <joint name="base_footprint_joint" type="fixed">
+    <origin xyz="0 0 ${wheel_radius - base_z_origin_to_wheel_origin}" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="base_link" />
+  </joint>
+  
+  <!-- BASE-LINK -->
+  <!--Actual body/chassis of the robot-->
+  <link name="base_link">
+    <inertial>
+      <mass value="${base_mass}" />
+      <origin xyz="0 0 0" />
+      <!--The 3x3 rotational inertia matrix. -->
+        <cylinder_inertia  m="${base_mass}" r="${base_radius}" h="${base_height}" />
+
+    </inertial>    
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+
+
+          <cylinder length="${base_height}" radius="${base_radius}" />
+
+
+      </geometry>
+      <material name="White" />
+    </visual>  
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0 " />
+      <geometry>
+
+          <cylinder length="${base_height}" radius="${base_radius}" />
+
+      </geometry>
+    </collision>     
+  </link>
+  <gazebo reference="base_link">
+    <material>Gazebo/White</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+  
+
+  <wheel fb="front" lr="right" parent="base_link" translateX="0" translateY="-0.5" flipY="-1"/>
+  <wheel fb="front" lr="left" parent="base_link" translateX="0" translateY="0.5" flipY="-1"/>
+
+
+ <joint name="caster_front_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="caster_front_link"/>
+      <origin xyz="0.115 0.0 0.007" rpy="${-M_PI/2} 0 0"/>
+    </joint>
+
+
+    <link name="caster_front_link">
+
+    <visual>
+      <origin xyz="0 0.02 0" rpy="${M_PI/2} 0 0" />
+      <geometry>
+
+          <cylinder length="${caster_f_height}" radius="${caster_f_radius}" />
+
+
+      </geometry>
+      <material name="Black" />
+    </visual>  
+
+
+      <collision>
+        <geometry>
+          <cylinder length="${caster_f_height}" radius="${caster_f_radius}" />
+        </geometry>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+      </collision>      
+      <inertial>
+        <mass value="0.01" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                 iyy="0.001" iyz="0.0" 
+                 izz="0.001" />
+      </inertial>
+    </link>
+    
+    <joint name="caster_back_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="caster_back_link"/>
+      <origin xyz="-0.135 0.0 0.009" rpy="${-M_PI/2} 0 0"/>
+    </joint>
+    <link name="caster_back_link">
+
+    <visual>
+      <origin xyz="0 0.02 0 " rpy="${M_PI/2} 0 0" />
+      <geometry>
+
+          <cylinder length="${caster_b_height}" radius="${caster_b_radius}" />
+
+
+      </geometry>
+      <material name="Black" />
+    </visual>  
+
+
+      <collision>
+        <geometry>
+          <cylinder length="0.0176" radius="0.017"/>
+        </geometry>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+      </collision>      
+      <inertial>
+        <mass value="0.01" />
+        <origin xyz="0 0 0" />        
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+                 iyy="0.001" iyz="0.0" 
+                 izz="0.001" />
+      </inertial>
+    </link>
+
+
+
+
+
+</robot>
